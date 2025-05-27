@@ -49,20 +49,20 @@ export async function onRequestGet({ request }) {
 
 function parseSearchResults(html) {
   const videos = [];
-  const blockRegex = /<div class="thumb-block[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/g;
+  const blockRegex = /<div class="thumb-block.*?">([\s\S]*?)<\/div>\s*<\/div>/g;
   let match;
 
   while ((match = blockRegex.exec(html)) !== null) {
     const block = match[1];
 
-    const linkMatch = block.match(/<a href="([^"]+)"/);
+    const linkMatch = block.match(/<a[^>]+href="([^"]+)"[^>]*>/);
     const link = linkMatch ? `https://www.xnxx.com${linkMatch[1]}` : null;
 
     const thumbMatch = block.match(/<img[^>]+(?:data-src|src)="([^"]+)"/);
     const thumbnail = thumbMatch ? thumbMatch[1] : null;
 
     const titleMatch = block.match(/<p class="metadata">([\s\S]*?)<\/p>/);
-    const title = titleMatch ? titleMatch[1].replace(/\s+/g, ' ').trim() : '';
+    const title = titleMatch ? titleMatch[1].replace(/\s+/g, ' ').trim() : 'No title';
 
     let views = null, rating = null, duration = null, quality = null;
     const metaRegex = /([\d.]+[MK]?)\s+(\d+%)?\s*(.*?)\s*-\s*(\d+p)/;
