@@ -34,7 +34,7 @@ export async function onRequestGet({ request }) {
     }
 
     const html = await response.text();
-    const videos = parseSearchResults(html);
+    const videos = extractVideosFromHTML(html);
 
     return new Response(JSON.stringify(videos), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
@@ -47,26 +47,16 @@ export async function onRequestGet({ request }) {
   }
 }
 
-function parseSearchResults(html) {
+// HTML extraction using matchAll (safer than div block regex)
+function extractVideosFromHTML(html) {
   const videos = [];
-  const blockRegex = /<div class="thumb-block.*?">([\s\S]*?)<\/div>\s*<\/div>/g;
-  let match;
+  const regex = /<a href="(\/video[^"]+)"[^>]*>\s*<div class="thumb[^"]*">[\s\S]*?<img[^>]+(?:data-src|src)="([^"]+)"[\s\S]*?<p class="metadata">([^<]+)<\/p>/g;
 
-  while ((match = blockRegex.exec(html)) !== null) {
-    const block = match[1];
-
-    const linkMatch = block.match(/<a[^>]+href="([^"]+)"[^>]*>/);
-    const link = linkMatch ? `https://www.xnxx.com${linkMatch[1]}` : null;
-
-    const thumbMatch = block.match(/<img[^>]+(?:data-src|src)="([^"]+)"/);
-    const thumbnail = thumbMatch ? thumbMatch[1] : null;
-
-    const titleMatch = block.match(/<p class="metadata">([\s\S]*?)<\/p>/);
-    const title = titleMatch ? titleMatch[1].replace(/\s+/g, ' ').trim() : 'No title';
+  for (const match of html.matchAll(regex)) {
+    const [_, href, thumb, meta] = match;
 
     let views = null, rating = null, duration = null, quality = null;
-    const metaRegex = /([\d.]+[MK]?)\s+(\d+%)?\s*(.*?)\s*-\s*(\d+p)/;
-    const metaMatch = title.match(metaRegex);
+    const metaMatch = meta.match(/([\d.]+[MK]?)\s+(\d+%)?\s*(.*?)\s*-\s*(\d+p)/);
     if (metaMatch) {
       views = metaMatch[1];
       rating = metaMatch[2];
@@ -74,17 +64,15 @@ function parseSearchResults(html) {
       quality = metaMatch[4];
     }
 
-    if (link && thumbnail) {
-      videos.push({
-        title,
-        url: link,
-        thumbnail,
-        views,
-        rating,
-        duration,
-        quality,
-      });
-    }
+    videos.push({
+      title: meta.trim(),
+      url: `https://www.xnxx.com${href}`,
+      thumbnail: thumb,
+      views,
+      rating,
+      duration,
+      quality,
+    });
   }
 
   return videos;
