@@ -1,3 +1,8 @@
+#### NOTE 
+
+- Dear Web Owner, If You Have Any Problem Please Contact Me. I'll Delete This Repository immediately.
+- Thanks For Your Understanding.
+
 # xnxx-api-jsk API (Cloudflare Pages)
 
 This is a serverless API hosted on Cloudflare Pages with Cloudflare Functions to scrape video search results and video URLs from XNXX. It provides two main endpoints: one for searching videos by query and page, and another for extracting the direct video URL from a video page.
@@ -65,8 +70,3 @@ This is a serverless API hosted on Cloudflare Pages with Cloudflare Functions to
 ```bash
 git clone https://github.com/jagat764/xnxx-api-jsk.git
 cd xnxx-api-jsk
- 
-#### NOTE 
-
-- Dear Web Owner, If You Have Any Problem Please Contact Me. I'll Delete This Repository immediately.
-- Thanks For Your Understanding.
