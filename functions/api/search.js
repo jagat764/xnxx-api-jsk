@@ -21,9 +21,12 @@ export async function onRequestGet({ request }) {
   }
 
   try {
-    const searchUrl = `https://www.xnxx.com/search/${encodeURIComponent(query.replace(' ', '+'))}/${page}`;
+    const searchUrl = `https://www.xnxx.com/search/${encodeURIComponent(query.replace(/\s+/g, '+'))}/${page}`;
     const response = await fetch(searchUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' },
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0 Safari/537.36',
+      },
     });
 
     if (!response.ok) {
@@ -46,28 +49,34 @@ export async function onRequestGet({ request }) {
 
 function parseSearchResults(html) {
   const videos = [];
-  const thumbBlockRegex = /<div class="thumb-block"[\s\S]*?>([\s\S]*?)<\/div>/g;
-  const thumbBlocks = html.match(thumbBlockRegex) || [];
+  const regex = /<div class="thumb-block.*?">([\s\S]*?)<\/div>\s*<\/div>/g;
+  let match;
 
-  for (const block of thumbBlocks) {
-    const linkMatch = block.match(/<a href="([^"]+)"[^>]*>/);
+  while ((match = regex.exec(html)) !== null) {
+    const block = match[1];
+
+    const linkMatch = block.match(/<a[^>]+href="([^"]+)"[^>]*>/);
     const link = linkMatch ? `https://www.xnxx.com${linkMatch[1]}` : null;
 
     const thumbMatch = block.match(/<img[^>]+(?:data-src|src)="([^"]+)"/);
     const thumb = thumbMatch ? thumbMatch[1] : null;
 
-    const metadataMatch = block.match(/<p class="metadata">([\s\S]*?)<\/p>/);
-    const metadata = metadataMatch ? metadataMatch[1].replace(/\s+/g, ' ').trim() : '';
+    const titleMatch = block.match(/<p class="metadata">([\s\S]*?)<\/p>/);
+    const titleRaw = titleMatch ? titleMatch[1].replace(/\s+/g, ' ').trim() : '';
 
-    const metadataRegex = /([\d\.]+[MK]?)\s*(\d+%)\s*([\w\s]+?)\s*-\s*(\d+p)/;
-    const match = metadata.match(metadataRegex);
-    const [views, rating, duration, quality] = match
-      ? [match[1], match[2], match[3], match[4]]
-      : [null, null, null, null];
+    let views = null, rating = null, duration = null, quality = null;
+    const metaRegex = /([\d\.]+[MK]?)\s*(\d+%)?\s*(.*?)\s*-\s*(\d+p)/;
+    const metaMatch = titleRaw.match(metaRegex);
+    if (metaMatch) {
+      views = metaMatch[1];
+      rating = metaMatch[2];
+      duration = metaMatch[3];
+      quality = metaMatch[4];
+    }
 
     if (link) {
       videos.push({
-        title: metadata,
+        title: titleRaw,
         url: link,
         thumbnail: thumb,
         views,
