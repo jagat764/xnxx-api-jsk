@@ -6,9 +6,9 @@ export async function onRequestGet({ request }) {
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  // Handle CORS preflight (OPTIONS)
+  // Handle preflight
   if (request.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   const videoPageUrl = url.searchParams.get('url');
@@ -22,7 +22,10 @@ export async function onRequestGet({ request }) {
 
   try {
     const response = await fetch(videoPageUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' },
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0 Safari/537.36',
+      },
     });
 
     if (!response.ok) {
@@ -50,9 +53,16 @@ export async function onRequestGet({ request }) {
   }
 }
 
-// Extract video URL from video page
+// Try multiple patterns for compatibility
 function extractVideoUrl(html) {
-  const scriptRegex = /html5player\.setVideoUrlHigh\('([^']+)'\)/;
-  const scriptMatch = html.match(scriptRegex);
-  return scriptMatch ? scriptMatch[1] : null;
+  const highRes = html.match(/html5player\.setVideoUrlHigh\('([^']+)'\)/);
+  if (highRes) return highRes[1];
+
+  const hls = html.match(/html5player\.setVideoHLS\('([^']+)'\)/);
+  if (hls) return hls[1];
+
+  const lowRes = html.match(/html5player\.setVideoUrlLow\('([^']+)'\)/);
+  if (lowRes) return lowRes[1];
+
+  return null;
 }
