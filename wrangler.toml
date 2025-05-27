@@ -1,8 +1,0 @@
-name = "xnxx-api-jsk"
-compatibility_date = "2025-05-27"
-main = "index.js"
-
-# Optional: Add a route if you have a custom domain
-# [[routes]]
-# pattern = "your-domain.com/*"
-# zone_name = "your-domain.com"
