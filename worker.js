@@ -50,7 +50,8 @@ async function handleVideo(videoPageUrl) {
   const low = html.match(/setVideoUrlLow\\('([^']+)'\\)/);
   const high = html.match(/setVideoUrlHigh\\('([^']+)'\\)/);
   const hq = html.match(/setVideoUrlHLS\\('([^']+)'\\)/);
-  const title = html.match(/<title>(.*?) - XNXX.COM<\\/title>/);
+  const title = html.match(/<title>(.*?) - XNXX.COM<\/title>/);
+
 
   return JSON.stringify({
     url: videoPageUrl,
