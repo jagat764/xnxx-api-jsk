@@ -7,7 +7,7 @@ export async function onRequestGet({ request }) {
   };
 
   if (request.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   const query = url.searchParams.get('q');
@@ -49,24 +49,24 @@ export async function onRequestGet({ request }) {
 
 function parseSearchResults(html) {
   const videos = [];
-  const regex = /<div class="thumb-block.*?">([\s\S]*?)<\/div>\s*<\/div>/g;
+  const blockRegex = /<div class="thumb-block[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/g;
   let match;
 
-  while ((match = regex.exec(html)) !== null) {
+  while ((match = blockRegex.exec(html)) !== null) {
     const block = match[1];
 
-    const linkMatch = block.match(/<a[^>]+href="([^"]+)"[^>]*>/);
+    const linkMatch = block.match(/<a href="([^"]+)"/);
     const link = linkMatch ? `https://www.xnxx.com${linkMatch[1]}` : null;
 
     const thumbMatch = block.match(/<img[^>]+(?:data-src|src)="([^"]+)"/);
-    const thumb = thumbMatch ? thumbMatch[1] : null;
+    const thumbnail = thumbMatch ? thumbMatch[1] : null;
 
     const titleMatch = block.match(/<p class="metadata">([\s\S]*?)<\/p>/);
-    const titleRaw = titleMatch ? titleMatch[1].replace(/\s+/g, ' ').trim() : '';
+    const title = titleMatch ? titleMatch[1].replace(/\s+/g, ' ').trim() : '';
 
     let views = null, rating = null, duration = null, quality = null;
-    const metaRegex = /([\d\.]+[MK]?)\s*(\d+%)?\s*(.*?)\s*-\s*(\d+p)/;
-    const metaMatch = titleRaw.match(metaRegex);
+    const metaRegex = /([\d.]+[MK]?)\s+(\d+%)?\s*(.*?)\s*-\s*(\d+p)/;
+    const metaMatch = title.match(metaRegex);
     if (metaMatch) {
       views = metaMatch[1];
       rating = metaMatch[2];
@@ -74,11 +74,11 @@ function parseSearchResults(html) {
       quality = metaMatch[4];
     }
 
-    if (link) {
+    if (link && thumbnail) {
       videos.push({
-        title: titleRaw,
+        title,
         url: link,
-        thumbnail: thumb,
+        thumbnail,
         views,
         rating,
         duration,
