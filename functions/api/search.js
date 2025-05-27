@@ -6,7 +6,6 @@ export async function onRequestGet({ request }) {
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  // Handle CORS preflight (OPTIONS)
   if (request.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -45,7 +44,6 @@ export async function onRequestGet({ request }) {
   }
 }
 
-// Parse search results using regex
 function parseSearchResults(html) {
   const videos = [];
   const thumbBlockRegex = /<div class="thumb-block"[\s\S]*?>([\s\S]*?)<\/div>/g;
@@ -81,4 +79,4 @@ function parseSearchResults(html) {
   }
 
   return videos;
-      }
+}
